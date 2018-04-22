@@ -17,6 +17,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var adapter: ItemAdapter
     private var itemList = ArrayList<ItemModel>()
     private lateinit var specialItem: ItemModel
+    private var steps = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,6 +33,7 @@ class MainActivity : AppCompatActivity() {
         adapter = ItemAdapter(itemList)
         imageRecyclerView.layoutManager = layoutManager as RecyclerView.LayoutManager?
         imageRecyclerView.adapter = adapter
+        stepView.text = "$steps"
 
         if (isSolved()) {
             Log.i("isSolved", "true")
@@ -44,6 +46,8 @@ class MainActivity : AppCompatActivity() {
                 itemList.shuffle()
             } while (!isSolved())
             adapter.notifyDataSetChanged()
+            steps = 0
+            stepView.text = "$steps"
         }
 
         recoverButton.setOnClickListener {
@@ -58,7 +62,7 @@ class MainActivity : AppCompatActivity() {
             resetButton.bootstrapBrand = DefaultBootstrapBrand.REGULAR
             recoverButton.bootstrapBrand = DefaultBootstrapBrand.REGULAR
             Thread(Runnable {
-                for (i in 0 until sp.pathLength) {
+                for (i in 0 until sp.length) {
                     Thread.sleep(200)
                     runOnUiThread {
                         when (path[i]) {
@@ -68,6 +72,8 @@ class MainActivity : AppCompatActivity() {
                             3 -> Collections.swap(itemList, itemList.indexOf(specialItem) + sp.size, itemList.indexOf(specialItem))
                         }
                         adapter.notifyDataSetChanged()
+                        steps++
+                        stepView.text = "$steps"
                     }
                 }
                 runOnUiThread {

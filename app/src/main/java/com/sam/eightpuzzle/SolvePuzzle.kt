@@ -1,37 +1,33 @@
 package com.sam.eightpuzzle
 
+import com.orhanobut.logger.Logger
+
 class SolvePuzzle(lists: ArrayList<ItemModel>) {
 
-    val size = 3
+    val size = 3        //方格阶数
+    var sx = -1         //空白块起始x
+    var sy = -1         //空白块起始y
+    var length = 0      //最优解长度
 
-    private var puzzle: Array<IntArray> = Array(size) { IntArray(size) }
+    private var puzzle: Array<IntArray> = Array(size) { IntArray(size) }        //构造sizexsize的二维数组
+    private val move = arrayOf(intArrayOf(-1, 0), intArrayOf(0, -1), intArrayOf(0, 1), intArrayOf(1, 0))        //左上下右四个移动方向
+    private var tempPath = IntArray(100)    //暂时路径
+    private var path = IntArray(100)        //最终路径
 
-    var sx = -1
+    private var limit = 0       //上限
+    private var flag = false        //找到解标志位
 
-    var sy = -1
-
-    private val move = arrayOf(intArrayOf(-1, 0), intArrayOf(0, -1), intArrayOf(0, 1), intArrayOf(1, 0))    //上左右下
-
-    private var path = IntArray(100)
-
-    var pathLength = 0
-
-    private var limit = 0
-
-    private var flag = false
-
-    init {
-        for ((index, value) in lists.withIndex()) {
+    init {      //初始化
+        for ((index, value) in lists.withIndex()) {     //将传进来的一维数组转成二维数组
             if (value.number == size * size - 1) {
                 sx = index / size
                 sy = index % size
             }
             puzzle[index / size][index % size] = value.number
         }
-
     }
 
-    private fun getManhattanValue(): Int {
+    private fun getManhattanValue(): Int {      //求解曼哈顿距离
         var value = 0
         for (i in 0 until size) {
             for (j in 0 until size) {
@@ -42,53 +38,54 @@ class SolvePuzzle(lists: ArrayList<ItemModel>) {
         return value
     }
 
-    private fun dfs(sx: Int, sy: Int, len: Int, preMove: Int) {
-        if (flag)
-            return
-
-        val dis = getManhattanValue()
-
-        if (len == limit) {
-            if (dis == 0) {
-                flag = true
-                pathLength = len
-            }
-            return
-        } else if (len < limit) {
-            if (dis == 0) {
-                flag = true
-                pathLength = len
-                return
-            }
-        }
-
-        for (i in 0..3) {
-            if (i + preMove == 3 && len > 0)
-                continue
-            val nx = sx + move[i][0]
-            val ny = sy + move[i][1]
-            if (nx in 0..(size - 1) && ny in 0..(size - 1)) {
-                puzzle.swap(sx, sy, nx, ny)
-                val value = getManhattanValue()
-                if (value + len <= limit && !flag) {
-                    path[len] = i
-                    dfs(nx, ny, len + 1, i)
+    /**
+     * @param sx(空白块座标x)
+     * @param sy(空白块座标y)
+     * @param len(当前路径长度)
+     * @param preMove(上一次的移动方向)
+     */
+    private fun dfs(sx: Int, sy: Int, len: Int, preMove: Int) {         //dfs
+        val dis = getManhattanValue()       //获取曼哈顿距离
+        if (dis == 0) {     //如果是目标解
+            if (!flag) {        //第一次找到目标解
+                flag = true     //标志位置true
+                tempPath.indices.forEach { i -> path[i] = tempPath[i] }     //保存路径
+                length = len        //保存路径长度
+            } else {        //找到其他解
+                if (len < length) {     //如果其他解更优
+                    tempPath.indices.forEach { i -> path[i] = tempPath[i] }     //保存路径
+                    length = len        //更新路径长度
                 }
-                puzzle.swap(sx, sy, nx, ny)
+            }
+            limit = length      //更新limit
+            return
+        }
+        for (i in 0..3) {       //遍历上下左右四个方向
+            if (i + preMove == 3 && len > 0)        //剔除preMove
+                continue
+            val nx = sx + move[i][0]        //空白块交换后的新座标
+            val ny = sy + move[i][1]
+            if (nx in 0..(size - 1) && ny in 0..(size - 1)) {       //如果没有移出边界
+                puzzle.swap(sx, sy, nx, ny)     //则swap
+                val value = getManhattanValue()     //求解新的曼哈顿距离
+                if (value + len < limit) {     //value + len + 1 <= limit
+                    tempPath[len] = i
+                    dfs(nx, ny, len + 1, i)     //开始dfs
+                }
+                puzzle.swap(sx, sy, nx, ny)     //回溯
             }
         }
     }
 
     fun solve(): IntArray {
-        limit = getManhattanValue()
-
-        print(limit)
-
+        limit = getManhattanValue()     //求解初始limit
         do {
             dfs(sx, sy, 0, 0)
             limit++
-        } while(!flag)
+        } while(!flag)      //如果没有找到则limit+1
 
+        Logger.d(path)
+        Logger.i(length.toString())
         return path
     }
 
