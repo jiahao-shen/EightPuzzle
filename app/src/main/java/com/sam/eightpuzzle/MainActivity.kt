@@ -62,10 +62,10 @@ class MainActivity : AppCompatActivity() {
             resetButton.bootstrapBrand = DefaultBootstrapBrand.REGULAR
             recoverButton.bootstrapBrand = DefaultBootstrapBrand.REGULAR
             Thread(Runnable {
-                for (i in 0 until sp.length) {
+                for (item in path) {
                     Thread.sleep(200)
                     runOnUiThread {
-                        when (path[i]) {
+                        when (item) {
                             0 -> Collections.swap(itemList, itemList.indexOf(specialItem) - sp.size, itemList.indexOf(specialItem))
                             1 -> Collections.swap(itemList, itemList.indexOf(specialItem) - 1, itemList.indexOf(specialItem))
                             2 -> Collections.swap(itemList, itemList.indexOf(specialItem) + 1, itemList.indexOf(specialItem))

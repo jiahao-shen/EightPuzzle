@@ -7,12 +7,11 @@ class SolvePuzzle(lists: ArrayList<ItemModel>) {
     val size = 3        //方格阶数
     var sx = -1         //空白块起始x
     var sy = -1         //空白块起始y
-    var length = 0      //最优解长度
 
     private var puzzle: Array<IntArray> = Array(size) { IntArray(size) }        //构造sizexsize的二维数组
     private val move = arrayOf(intArrayOf(-1, 0), intArrayOf(0, -1), intArrayOf(0, 1), intArrayOf(1, 0))        //左上下右四个移动方向
-    private var tempPath = IntArray(100)    //暂时路径
-    private var path = IntArray(100)        //最终路径
+    private var temp = Array(100, { _ -> -1 })    //暂时路径
+    private var path = ArrayList<Int>()       //最终路径
 
     private var limit = 0       //上限
     private var flag = false        //找到解标志位
@@ -46,18 +45,14 @@ class SolvePuzzle(lists: ArrayList<ItemModel>) {
      */
     private fun dfs(sx: Int, sy: Int, len: Int, preMove: Int) {         //dfs
         val dis = getManhattanValue()       //获取曼哈顿距离
-        if (dis == 0) {     //如果是目标解
-            if (!flag) {        //第一次找到目标解
-                flag = true     //标志位置true
-                tempPath.indices.forEach { i -> path[i] = tempPath[i] }     //保存路径
-                length = len        //保存路径长度
-            } else {        //找到其他解
-                if (len < length) {     //如果其他解更优
-                    tempPath.indices.forEach { i -> path[i] = tempPath[i] }     //保存路径
-                    length = len        //更新路径长度
-                }
+        if (dis == 0) { //如果是目标解
+            for (item in temp) {
+                if (item == -1)
+                    break
+                else
+                    path.add(item)
             }
-            limit = length      //更新limit
+            flag = true
             return
         }
         for (i in 0..3) {       //遍历上下左右四个方向
@@ -69,7 +64,7 @@ class SolvePuzzle(lists: ArrayList<ItemModel>) {
                 puzzle.swap(sx, sy, nx, ny)     //则swap
                 val value = getManhattanValue()     //求解新的曼哈顿距离
                 if (value + len < limit) {     //value + len + 1 <= limit
-                    tempPath[len] = i
+                    temp[len] = i
                     dfs(nx, ny, len + 1, i)     //开始dfs
                 }
                 puzzle.swap(sx, sy, nx, ny)     //回溯
@@ -77,7 +72,7 @@ class SolvePuzzle(lists: ArrayList<ItemModel>) {
         }
     }
 
-    fun solve(): IntArray {
+    fun solve(): ArrayList<Int> {
         limit = getManhattanValue()     //求解初始limit
         do {
             dfs(sx, sy, 0, 0)
@@ -85,7 +80,6 @@ class SolvePuzzle(lists: ArrayList<ItemModel>) {
         } while(!flag)      //如果没有找到则limit+1
 
         Logger.d(path)
-        Logger.i(length.toString())
         return path
     }
 
